@@ -817,6 +817,25 @@ class v4l2_queryctrl(ctypes.Structure):
         ('reserved', ctypes.c_uint32 * 2),
     ]
 
+V4L2_CTRL_MAX_DIMS = 4
+
+class v4l2_query_ext_ctrl(ctypes.Structure):
+    _fields_ = [
+        ('id', ctypes.c_uint32),
+        ('type', v4l2_ctrl_type),
+        ('name', ctypes.c_char * 32),
+        ('minimum', ctypes.c_int64),
+        ('maximum', ctypes.c_int64),
+        ('step', ctypes.c_uint64),
+        ('default', ctypes.c_int64),
+        ('flags', ctypes.c_uint32),
+        ('elem_size', ctypes.c_uint32),
+        ('elems', ctypes.c_uint32),
+        ('nr_of_dims', ctypes.c_uint32),
+        ('dims', ctypes.c_uint32 * V4L2_CTRL_MAX_DIMS),
+        ('reserved', ctypes.c_uint32 * 32),
+    ]
+
 class v4l2_querymenu(ctypes.Structure):
     class _u(ctypes.Union):
         _fields_ = [
@@ -911,6 +930,7 @@ VIDIOC_QUERYMENU = _IOWR('V', 37, v4l2_querymenu)
 VIDIOC_DQEVENT = _IOR('V', 89, v4l2_event)
 VIDIOC_SUBSCRIBE_EVENT = _IOW('V', 90, v4l2_event_subscription)
 VIDIOC_UNSUBSCRIBE_EVENT = _IOW('V', 91, v4l2_event_subscription)
+VIDIOC_QUERY_EXT_CTRL = _IOWR('V', 103, v4l2_query_ext_ctrl)
 
 # A.8. Video Class-Specific Request Codes
 UVC_RC_UNDEFINED = 0x00
@@ -2184,10 +2204,10 @@ class V4L2Ctrls:
     def get_device_controls(self):
         ctrls = []
         next_flag = V4L2_CTRL_FLAG_NEXT_CTRL | V4L2_CTRL_FLAG_NEXT_COMPOUND
-        qctrl = v4l2_queryctrl(next_flag)
+        qctrl = v4l2_query_ext_ctrl(next_flag)
         while True:
             try:
-                ioctl(self.fd, VIDIOC_QUERYCTRL, qctrl)
+                ioctl(self.fd, VIDIOC_QUERY_EXT_CTRL, qctrl)
             except:
                 break
             if qctrl.type in [V4L2_CTRL_TYPE_INTEGER, V4L2_CTRL_TYPE_BOOLEAN,
